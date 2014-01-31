@@ -7,7 +7,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid.Tags
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// If is the conditional block
 	///
 	/// {% if user.admin %}
@@ -26,11 +28,11 @@ namespace DotLiquid.Tags
 
 		protected List<Condition> Blocks { get; private set; }
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Blocks = new List<Condition>();
 			PushBlock("if", markup);
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
 		public override void UnknownTag(string tag, string markup, List<string> tokens)
@@ -42,20 +44,19 @@ namespace DotLiquid.Tags
 				base.UnknownTag(tag, markup, tokens);
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
-			context.Stack(() =>
+			await context.StackAsync(async () =>
 			{
 				foreach (Condition block in Blocks)
 				{
 					if (block.Evaluate(context))
 					{
-						RenderAll(block.Attachment, context, result);
+						await RenderAllAsync(block.Attachment, context, result).ConfigureAwait(false);
 						return;
 					}
 				}
-				;
-			});
+			}).ConfigureAwait(false);
 		}
 
 		private void PushBlock(string tag, string markup)

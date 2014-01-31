@@ -4,10 +4,12 @@ using System.Web.Mvc;
 
 namespace DotLiquid.Website.Controllers
 {
-	[HandleError]
+    using System.Threading.Tasks;
+
+    [HandleError]
 	public class TryOnlineController : Controller
 	{
-		public ActionResult Index()
+		public async Task<ActionResult> Index()
 		{
 			const string templateCode = @"&lt;p&gt;{{ user.name | upcase }} has to do:&lt;/p&gt;
 
@@ -17,7 +19,7 @@ namespace DotLiquid.Website.Controllers
 {% endfor -%}
 &lt;/ul&gt;";
 
-			string result = LiquifyInternal(templateCode);
+            string result = await LiquifyInternalAsync(templateCode);
 
 			ViewData["TemplateCode"] = templateCode;
 			ViewData["Result"] = result;
@@ -26,9 +28,9 @@ namespace DotLiquid.Website.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult Liquify(string templateCode)
+		public async Task<ContentResult> Liquify(string templateCode)
 		{
-			string result = LiquifyInternal(templateCode);
+            string result = await LiquifyInternalAsync(templateCode);
 
 			return new ContentResult
 			{
@@ -36,10 +38,10 @@ namespace DotLiquid.Website.Controllers
 			};
 		}
 
-		private static string LiquifyInternal(string templateCode)
+		private static async Task<string> LiquifyInternalAsync(string templateCode)
 		{
-			Template template = Template.Parse(templateCode);
-			return template.Render(Hash.FromAnonymousObject(new
+			Template template = await Template.ParseAsync(templateCode).ConfigureAwait(false);
+			return await template.RenderAsync(Hash.FromAnonymousObject(new
 			{
 				user = new User
 				{
@@ -50,7 +52,7 @@ namespace DotLiquid.Website.Controllers
 						new Task { Name = "Code comments" }
 					}
 				}
-			}));
+			})).ConfigureAwait(false);
 		}
 	}
 

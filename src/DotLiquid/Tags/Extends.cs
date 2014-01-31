@@ -8,7 +8,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid.Tags
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// The Extends tag is used in conjunction with the Block tag to provide template inheritance.
 	/// For further syntax and usage please refer to
 	/// <see cref="http://docs.djangoproject.com/en/dev/topics/templates/#template-inheritance"/>
@@ -62,7 +64,7 @@ namespace DotLiquid.Tags
 
 		private string _templateName;
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Match syntaxMatch = Syntax.Match(markup);
 
@@ -73,7 +75,7 @@ namespace DotLiquid.Tags
 			else
 				throw new SyntaxException(Liquid.ResourceManager.GetString("ExtendsTagSyntaxException"));
 
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
 		internal override void AssertTagRulesViolation(List<object> rootNodeList)
@@ -99,19 +101,19 @@ namespace DotLiquid.Tags
 		{
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
             // Get the template or template content and then either copy it (since it will be modified) or parse it
 			IFileSystem fileSystem = context.Registers["file_system"] as IFileSystem ?? Template.FileSystem;
             object file = fileSystem.ReadTemplateFile(context, _templateName);
 		    Template template = file as Template;
-            template = template ?? Template.Parse(file == null ? null : file.ToString());
+            template = template ?? await Template.ParseAsync(file == null ? null : file.ToString()).ConfigureAwait(false);
 
 		    List<Block> parentBlocks = FindBlocks(template.Root, null);
             List<Block> orphanedBlocks = ((List<Block>)context.Scopes[0]["extends"]) ?? new List<Block>();
 		    BlockRenderState blockState = BlockRenderState.Find(context) ?? new BlockRenderState();
 
-            context.Stack(() =>
+            await context.StackAsync(async () =>
             {
                 context["blockstate"] = blockState;         // Set or copy the block state down to this scope
                 context["extends"] = new List<Block>();     // Holds Blocks that were not found in the parent
@@ -124,7 +126,7 @@ namespace DotLiquid.Tags
                         Block parent;
                         if (blockState.Parents.TryGetValue(block, out parent))
                             blockState.Parents[pb] = parent;
-                        pb.AddParent(blockState.Parents, pb.GetNodeList(blockState));
+                        await pb.AddParentAsync(blockState.Parents, pb.GetNodeList(blockState)).ConfigureAwait(false);
                         blockState.NodeLists[pb] = block.GetNodeList(blockState);
                     }
                     else if(IsExtending(template))
@@ -132,8 +134,8 @@ namespace DotLiquid.Tags
                         ((List<Block>)context.Scopes[0]["extends"]).Add(block);
                     }
                 }
-			    template.Render(result, RenderParameters.FromContext(context));
-            });
+			    await template.RenderAsync(result, RenderParameters.FromContext(context)).ConfigureAwait(false);
+            }).ConfigureAwait(false);
 		}
 
         public bool IsExtending(Template template)

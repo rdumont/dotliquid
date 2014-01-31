@@ -2,16 +2,18 @@ using NUnit.Framework;
 
 namespace DotLiquid.Tests
 {
-	public class Helper
+    using System.Threading.Tasks;
+
+    public class Helper
 	{
-		public static void AssertTemplateResult(string expected, string template, Hash localVariables)
+		public static async Task AssertTemplateResultAsync(string expected, string template, Hash localVariables)
 		{
-			Assert.AreEqual(expected, Template.Parse(template).Render(localVariables));
+            Assert.AreEqual(expected, await (await Template.ParseAsync(template).ConfigureAwait(false)).RenderAsync(localVariables).ConfigureAwait(false));
 		}
 
-		public static void AssertTemplateResult(string expected, string template)
+		public static async Task AssertTemplateResultAsync(string expected, string template)
 		{
-			AssertTemplateResult(expected, template, null);
+			await AssertTemplateResultAsync(expected, template, null).ConfigureAwait(false);
 		}
 	}
 }

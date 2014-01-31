@@ -8,7 +8,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// Holds variables. Variables are only loaded "just in time"
 	/// and are not evaluated as part of the render stage
 	///
@@ -56,7 +58,7 @@ namespace DotLiquid
 			}
 		}
 
-		public void Render(Context context, TextWriter result)
+		public Task RenderAsync(Context context, TextWriter result)
 		{
 			object output = RenderInternal(context);
 
@@ -80,6 +82,7 @@ namespace DotLiquid
 					outputString = output.ToString();
 				result.Write(outputString);
 			}
+		    return Task.Delay(0);
 		}
 
 		private object RenderInternal(Context context)
@@ -117,9 +120,9 @@ namespace DotLiquid
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		internal object Render(Context context)
+		internal Task<object> RenderAsync(Context context)
 		{
-			return RenderInternal(context);
+			return Task.FromResult(RenderInternal(context));
 		}
 
 		public class Filter

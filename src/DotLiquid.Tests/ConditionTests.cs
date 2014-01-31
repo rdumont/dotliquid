@@ -189,8 +189,8 @@ namespace DotLiquid.Tests
 		{
 			var model = new { value = new decimal(-10.5) };
 
-			string output = Template.Parse("{% if model.value < 0 %}passed{% endif %}")
-				.Render(Hash.FromAnonymousObject(new { model }));
+            string output = Template.ParseAsync("{% if model.value < 0 %}passed{% endif %}").Result
+                .RenderAsync(Hash.FromAnonymousObject(new { model })).Result;
 
 			Assert.AreEqual("passed", output);
 		}
@@ -204,8 +204,9 @@ namespace DotLiquid.Tests
 			row.Add("MyID", id);
 
 			var current = "MyID is {% if MyID == 1 %}1{%endif%}";
-			var parse = DotLiquid.Template.Parse(current);
-			var parsedOutput = parse.Render(new RenderParameters() { LocalVariables = Hash.FromDictionary(row) });
+            var parse = DotLiquid.Template.ParseAsync(current).Result;
+			var parsedOutput = parse.RenderAsync(new RenderParameters() { LocalVariables = Hash.FromDictionary(row) })
+                .Result;
 			Assert.AreEqual("MyID is 1", parsedOutput);
 		}
 

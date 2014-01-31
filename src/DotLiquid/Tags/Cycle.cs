@@ -7,7 +7,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid.Tags
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// Cycle is usually used within a loop to alternate between values, like colors or DOM classes.
 	/// 
 	///   {% for item in items %}
@@ -28,7 +30,7 @@ namespace DotLiquid.Tags
 		private string[] _variables;
 		private string _name;
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Match match = NamedSyntax.Match(markup);
 			if (match.Success)
@@ -50,7 +52,7 @@ namespace DotLiquid.Tags
 				}
 			}
 
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
 		private static string[] VariablesFromString(string markup)
@@ -64,20 +66,20 @@ namespace DotLiquid.Tags
 			}).ToArray();
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
 			context.Registers["cycle"] = context.Registers["cycle"] ?? new Hash(0);
 
-			context.Stack(() =>
+			await context.StackAsync(async () =>
 			{
 				string key = context[_name].ToString();
 				int iteration = (int) (((Hash) context.Registers["cycle"])[key] ?? 0);
-				result.Write(context[_variables[iteration]].ToString());
+				await result.WriteAsync(context[_variables[iteration]].ToString()).ConfigureAwait(false);
 				++iteration;
 				if (iteration >= _variables.Length)
 					iteration = 0;
 				((Hash) context.Registers["cycle"])[key] = iteration;
-			});
+			}).ConfigureAwait(false);
 		}
 	}
 }

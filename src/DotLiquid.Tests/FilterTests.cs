@@ -83,7 +83,7 @@ namespace DotLiquid.Tests
 		public void TestNonExistentFilter()
 		{
 			_context["var"] = 1000;
-			Assert.Throws<FilterNotFoundException>(() => new Variable("var | syzzy").Render(_context));
+			Assert.Throws<FilterNotFoundException>(() => new Variable("var | syzzy").RenderAsync(_context));
 		}*/
 
 		[Test]
@@ -91,7 +91,7 @@ namespace DotLiquid.Tests
 		{
 			_context["var"] = 1000;
 			_context.AddFilters(typeof(MoneyFilter));
-			Assert.AreEqual(" 1000$ ", new Variable("var | money").Render(_context));
+            Assert.AreEqual(" 1000$ ", new Variable("var | money").RenderAsync(_context).Result);
 		}
 
 		[Test]
@@ -99,7 +99,7 @@ namespace DotLiquid.Tests
 		{
 			_context["var"] = 1000;
 			_context.AddFilters(typeof(MoneyFilter));
-			Assert.AreEqual(" 1000$ ", new Variable("var | money_with_underscore").Render(_context));
+            Assert.AreEqual(" 1000$ ", new Variable("var | money_with_underscore").RenderAsync(_context).Result);
 		}
 
 		[Test]
@@ -107,7 +107,7 @@ namespace DotLiquid.Tests
 		{
 			_context["var"] = 1000;
 			_context.AddFilters(typeof(FiltersWithArguments));
-			Assert.AreEqual("[1005]", new Variable("var | adjust: 5").Render(_context));
+            Assert.AreEqual("[1005]", new Variable("var | adjust: 5").RenderAsync(_context).Result);
 		}
 
 		[Test]
@@ -115,7 +115,7 @@ namespace DotLiquid.Tests
 		{
 			_context["var"] = 1000;
 			_context.AddFilters(typeof(FiltersWithArguments));
-			Assert.AreEqual("[995]", new Variable("var | adjust: -5").Render(_context));
+            Assert.AreEqual("[995]", new Variable("var | adjust: -5").RenderAsync(_context).Result);
 		}
 
 		[Test]
@@ -123,7 +123,7 @@ namespace DotLiquid.Tests
 		{
 			_context["var"] = 1000;
 			_context.AddFilters(typeof(FiltersWithArguments));
-			Assert.AreEqual("[1010]", new Variable("var | adjust").Render(_context));
+            Assert.AreEqual("[1010]", new Variable("var | adjust").RenderAsync(_context).Result);
 		}
 
 		[Test]
@@ -131,7 +131,7 @@ namespace DotLiquid.Tests
 		{
 			_context["var"] = 1000;
 			_context.AddFilters(typeof(FiltersWithArguments));
-			Assert.AreEqual("[1150]", new Variable("var | add_sub: 200, 50").Render(_context));
+            Assert.AreEqual("[1150]", new Variable("var | add_sub: 200, 50").RenderAsync(_context).Result);
 		}
 
 		/*/// <summary>
@@ -142,7 +142,7 @@ namespace DotLiquid.Tests
 		{
 			_context["var"] = 1000;
 			_context.AddFilters(typeof(FiltersWithArguments));
-			Assert.AreEqual("[1150]", string.Join(string.Empty, new Variable("var | add_sub: 200 50").Render(_context));
+			Assert.AreEqual("[1150]", string.Join(string.Empty, new Variable("var | add_sub: 200 50").RenderAsync(_context));
 		}*/
 
 		[Test]
@@ -151,7 +151,7 @@ namespace DotLiquid.Tests
 			_context["var"] = 1000;
 			_context.AddFilters(typeof(MoneyFilter));
 			_context.AddFilters(typeof(CanadianMoneyFilter));
-			Assert.AreEqual(" 1000$ CAD ", new Variable("var | money").Render(_context));
+            Assert.AreEqual(" 1000$ CAD ", new Variable("var | money").RenderAsync(_context).Result);
 		}
 
 		[Test]
@@ -159,14 +159,14 @@ namespace DotLiquid.Tests
 		{
 			_context["var"] = "abcd";
 			_context.AddFilters(typeof(MoneyFilter));
-			Assert.AreEqual(4, new Variable("var | size").Render(_context));
+            Assert.AreEqual(4, new Variable("var | size").RenderAsync(_context).Result);
 		}
 
 		[Test]
 		public void TestJoin()
 		{
 			_context["var"] = new[] { 1, 2, 3, 4 };
-			Assert.AreEqual("1 2 3 4", new Variable("var | join").Render(_context));
+            Assert.AreEqual("1 2 3 4", new Variable("var | join").RenderAsync(_context).Result);
 		}
 
 		[Test]
@@ -177,31 +177,31 @@ namespace DotLiquid.Tests
 			_context["words"] = new[] { "expected", "as", "alphabetic" };
 			_context["arrays"] = new[] { new[] { "flattened" }, new[] { "are" } };
 
-			CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, new Variable("numbers | sort").Render(_context) as IEnumerable);
-			CollectionAssert.AreEqual(new[] { "alphabetic", "as", "expected" }, new Variable("words | sort").Render(_context) as IEnumerable);
-			CollectionAssert.AreEqual(new[] { 3 }, new Variable("value | sort").Render(_context) as IEnumerable);
-			CollectionAssert.AreEqual(new[] { "are", "flattened" }, new Variable("arrays | sort").Render(_context) as IEnumerable);
+			CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, new Variable("numbers | sort").RenderAsync(_context).Result as IEnumerable);
+            CollectionAssert.AreEqual(new[] { "alphabetic", "as", "expected" }, new Variable("words | sort").RenderAsync(_context).Result as IEnumerable);
+            CollectionAssert.AreEqual(new[] { 3 }, new Variable("value | sort").RenderAsync(_context).Result as IEnumerable);
+            CollectionAssert.AreEqual(new[] { "are", "flattened" }, new Variable("arrays | sort").RenderAsync(_context).Result as IEnumerable);
 		}
 
 		[Test]
 		public void TestSplit()
 		{
 			_context["var"] = "a~b";
-			Assert.AreEqual(new[] { "a", "b" }, new Variable("var | split:'~'").Render(_context));
+            Assert.AreEqual(new[] { "a", "b" }, new Variable("var | split:'~'").RenderAsync(_context).Result);
 		}
 
 		[Test]
 		public void TestStripHtml()
 		{
 			_context["var"] = "<b>bla blub</a>";
-			Assert.AreEqual("bla blub", new Variable("var | strip_html").Render(_context));
+            Assert.AreEqual("bla blub", new Variable("var | strip_html").RenderAsync(_context).Result);
 		}
 
 		[Test]
 		public void Capitalize()
 		{
 			_context["var"] = "blub";
-			Assert.AreEqual("Blub", new Variable("var | capitalize").Render(_context));
+            Assert.AreEqual("Blub", new Variable("var | capitalize").RenderAsync(_context).Result);
 		}
 
 		[Test]
@@ -209,9 +209,9 @@ namespace DotLiquid.Tests
 		{
 			Template.RegisterFilter(typeof(MoneyFilter));
 
-			Assert.AreEqual(" 1000$ ", Template.Parse("{{1000 | money}}").Render());
-			Assert.AreEqual(" 1000$ CAD ", Template.Parse("{{1000 | money}}").Render(new RenderParameters { Filters = new[] { typeof(CanadianMoneyFilter) } }));
-			Assert.AreEqual(" 1000$ CAD ", Template.Parse("{{1000 | money}}").Render(new RenderParameters { Filters = new[] { typeof(CanadianMoneyFilter) } }));
+            Assert.AreEqual(" 1000$ ", Template.ParseAsync("{{1000 | money}}").Result.RenderAsync().Result);
+            Assert.AreEqual(" 1000$ CAD ", Template.ParseAsync("{{1000 | money}}").Result.RenderAsync(new RenderParameters { Filters = new[] { typeof(CanadianMoneyFilter) } }).Result);
+            Assert.AreEqual(" 1000$ CAD ", Template.ParseAsync("{{1000 | money}}").Result.RenderAsync(new RenderParameters { Filters = new[] { typeof(CanadianMoneyFilter) } }).Result);
 		}
 
 		[Test]
@@ -220,7 +220,7 @@ namespace DotLiquid.Tests
 			_context["var"] = 1000;
 			_context["name"] = "King Kong";
 			_context.AddFilters(typeof(ContextFilters));
-			Assert.AreEqual(" King Kong has 1000$ ", new Variable("var | bank_statement").Render(_context));
+            Assert.AreEqual(" King Kong has 1000$ ", new Variable("var | bank_statement").RenderAsync(_context).Result);
 		}
 	}
 }

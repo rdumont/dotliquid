@@ -2,20 +2,22 @@
 
 namespace DotLiquid.Tests.Tags
 {
+    using System.Threading.Tasks;
+
     [TestFixture]
     public class RawTests
     {
         [Test]
-        public void TestTagInRaw()
+        public async Task TestTagInRaw()
         {
-			Helper.AssertTemplateResult("{% comment %} test {% endcomment %}",
+			await Helper.AssertTemplateResultAsync("{% comment %} test {% endcomment %}",
 				"{% raw %}{% comment %} test {% endcomment %}{% endraw %}");
         }
 
 		[Test]
-		public void TestOutputInRaw()
+		public async Task TestOutputInRaw()
 		{
-			Helper.AssertTemplateResult("{{ test }}",
+			await Helper.AssertTemplateResultAsync("{{ test }}",
 				"{% raw %}{{ test }}{% endraw %}");
 		}
 	}

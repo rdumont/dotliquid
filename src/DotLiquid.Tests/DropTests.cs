@@ -148,134 +148,134 @@ namespace DotLiquid.Tests
 		{
 			Assert.DoesNotThrow(() =>
 			{
-				Template tpl = Template.Parse("  ");
-				tpl.Render(Hash.FromAnonymousObject(new { product = new ProductDrop() }));
+				Template tpl = Template.ParseAsync("  ").Result;
+				tpl.RenderAsync(Hash.FromAnonymousObject(new { product = new ProductDrop() })).Wait();
 			});
 		}
 
 		[Test]
 		public void TestDropDoesNotOutputItself()
 		{
-			string output = Template.Parse(" {{ product }} ")
-				.Render(Hash.FromAnonymousObject(new { product = new ProductDrop() }));
+			string output = Template.ParseAsync(" {{ product }} ").Result
+                .RenderAsync(Hash.FromAnonymousObject(new { product = new ProductDrop() })).Result;
 			Assert.AreEqual("  ", output);
 		}
 
 		[Test]
 		public void TestDropWithFilters()
 		{
-			string output = Template.Parse(" {{ product | product_text }} ")
-				.Render(new RenderParameters
+			string output = Template.ParseAsync(" {{ product | product_text }} ").Result
+				.RenderAsync(new RenderParameters
 				{
 					LocalVariables = Hash.FromAnonymousObject(new { product = new ProductDrop() }),
 					Filters = new[] { typeof(ProductFilter) }
-				});
+                }).Result;
 			Assert.AreEqual(" text1 ", output);
 		}
 
 		[Test]
 		public void TestTextDrop()
 		{
-			string output = Template.Parse(" {{ product.texts.text }} ")
-				.Render(Hash.FromAnonymousObject(new { product = new ProductDrop() }));
+			string output = Template.ParseAsync(" {{ product.texts.text }} ").Result
+                .RenderAsync(Hash.FromAnonymousObject(new { product = new ProductDrop() })).Result;
 			Assert.AreEqual(" text1 ", output);
 		}
 
 		[Test]
 		public void TestTextDrop2()
 		{
-			string output = Template.Parse(" {{ product.catchall.unknown }} ")
-				.Render(Hash.FromAnonymousObject(new { product = new ProductDrop() }));
+			string output = Template.ParseAsync(" {{ product.catchall.unknown }} ").Result
+                .RenderAsync(Hash.FromAnonymousObject(new { product = new ProductDrop() })).Result;
 			Assert.AreEqual(" method: unknown ", output);
 		}
 
 		[Test]
 		public void TestTextArrayDrop()
 		{
-			string output = Template.Parse("{% for text in product.texts.array %} {{text}} {% endfor %}")
-				.Render(Hash.FromAnonymousObject(new { product = new ProductDrop() }));
+			string output = Template.ParseAsync("{% for text in product.texts.array %} {{text}} {% endfor %}").Result
+                .RenderAsync(Hash.FromAnonymousObject(new { product = new ProductDrop() })).Result;
 			Assert.AreEqual(" text1  text2 ", output);
 		}
 
 		[Test]
 		public void TestContextDrop()
 		{
-			string output = Template.Parse(" {{ context.bar }} ")
-				.Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), bar = "carrot" }));
+			string output = Template.ParseAsync(" {{ context.bar }} ").Result
+                .RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), bar = "carrot" })).Result;
 			Assert.AreEqual(" carrot ", output);
 		}
 
 		[Test]
 		public void TestNestedContextDrop()
 		{
-			string output = Template.Parse(" {{ product.context.foo }} ")
-				.Render(Hash.FromAnonymousObject(new { product = new ProductDrop(), foo = "monkey" }));
+			string output = Template.ParseAsync(" {{ product.context.foo }} ").Result
+                .RenderAsync(Hash.FromAnonymousObject(new { product = new ProductDrop(), foo = "monkey" })).Result;
 			Assert.AreEqual(" monkey ", output);
 		}
 
 		[Test]
 		public void TestProtected()
 		{
-			string output = Template.Parse(" {{ product.call_me_not }} ")
-				.Render(Hash.FromAnonymousObject(new { product = new ProductDrop() }));
+			string output = Template.ParseAsync(" {{ product.call_me_not }} ").Result
+                .RenderAsync(Hash.FromAnonymousObject(new { product = new ProductDrop() })).Result;
 			Assert.AreEqual("  ", output);
 		}
 
 		[Test]
 		public void TestScope()
 		{
-			Assert.AreEqual("1", Template.Parse("{{ context.scopes }}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop() })));
-			Assert.AreEqual("2", Template.Parse("{%for i in dummy%}{{ context.scopes }}{%endfor%}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })));
-			Assert.AreEqual("3", Template.Parse("{%for i in dummy%}{%for i in dummy%}{{ context.scopes }}{%endfor%}{%endfor%}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })));
+            Assert.AreEqual("1", Template.ParseAsync("{{ context.scopes }}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop() })).Result);
+            Assert.AreEqual("2", Template.ParseAsync("{%for i in dummy%}{{ context.scopes }}{%endfor%}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })).Result);
+            Assert.AreEqual("3", Template.ParseAsync("{%for i in dummy%}{%for i in dummy%}{{ context.scopes }}{%endfor%}{%endfor%}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })).Result);
 		}
 
 		[Test]
 		public void TestScopeThroughProc()
 		{
-			Assert.AreEqual("1", Template.Parse("{{ s }}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), s = (Proc) (c => c["context.scopes"]) })));
-			Assert.AreEqual("2", Template.Parse("{%for i in dummy%}{{ s }}{%endfor%}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), s = (Proc) (c => c["context.scopes"]), dummy = new[] { 1 } })));
-			Assert.AreEqual("3", Template.Parse("{%for i in dummy%}{%for i in dummy%}{{ s }}{%endfor%}{%endfor%}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), s = (Proc) (c => c["context.scopes"]), dummy = new[] { 1 } })));
+            Assert.AreEqual("1", Template.ParseAsync("{{ s }}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), s = (Proc)(c => c["context.scopes"]) })).Result);
+            Assert.AreEqual("2", Template.ParseAsync("{%for i in dummy%}{{ s }}{%endfor%}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), s = (Proc)(c => c["context.scopes"]), dummy = new[] { 1 } })).Result);
+            Assert.AreEqual("3", Template.ParseAsync("{%for i in dummy%}{%for i in dummy%}{{ s }}{%endfor%}{%endfor%}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), s = (Proc)(c => c["context.scopes"]), dummy = new[] { 1 } })).Result);
 		}
 
 		[Test]
 		public void TestScopeWithAssigns()
 		{
-			Assert.AreEqual("variable", Template.Parse("{% assign a = 'variable'%}{{a}}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop() })));
-			Assert.AreEqual("variable", Template.Parse("{% assign a = 'variable'%}{%for i in dummy%}{{a}}{%endfor%}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })));
-			Assert.AreEqual("test", Template.Parse("{% assign header_gif = \"test\"%}{{header_gif}}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop() })));
-			Assert.AreEqual("test", Template.Parse("{% assign header_gif = 'test'%}{{header_gif}}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop() })));
+            Assert.AreEqual("variable", Template.ParseAsync("{% assign a = 'variable'%}{{a}}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop() })).Result);
+            Assert.AreEqual("variable", Template.ParseAsync("{% assign a = 'variable'%}{%for i in dummy%}{{a}}{%endfor%}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })).Result);
+            Assert.AreEqual("test", Template.ParseAsync("{% assign header_gif = \"test\"%}{{header_gif}}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop() })).Result);
+            Assert.AreEqual("test", Template.ParseAsync("{% assign header_gif = 'test'%}{{header_gif}}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop() })).Result);
 		}
 
 		[Test]
 		public void TestScopeFromTags()
 		{
-			Assert.AreEqual("1", Template.Parse("{% for i in context.scopes_as_array %}{{i}}{% endfor %}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })));
-			Assert.AreEqual("12", Template.Parse("{%for a in dummy%}{% for i in context.scopes_as_array %}{{i}}{% endfor %}{% endfor %}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })));
-			Assert.AreEqual("123", Template.Parse("{%for a in dummy%}{%for a in dummy%}{% for i in context.scopes_as_array %}{{i}}{% endfor %}{% endfor %}{% endfor %}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })));
+            Assert.AreEqual("1", Template.ParseAsync("{% for i in context.scopes_as_array %}{{i}}{% endfor %}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })).Result);
+            Assert.AreEqual("12", Template.ParseAsync("{%for a in dummy%}{% for i in context.scopes_as_array %}{{i}}{% endfor %}{% endfor %}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })).Result);
+            Assert.AreEqual("123", Template.ParseAsync("{%for a in dummy%}{%for a in dummy%}{% for i in context.scopes_as_array %}{{i}}{% endfor %}{% endfor %}{% endfor %}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1 } })).Result);
 		}
 
 		[Test]
 		public void TestAccessContextFromDrop()
 		{
-			Assert.AreEqual("123", Template.Parse("{% for a in dummy %}{{ context.loop_pos }}{% endfor %}").Render(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1, 2, 3 } })));
+            Assert.AreEqual("123", Template.ParseAsync("{% for a in dummy %}{{ context.loop_pos }}{% endfor %}").Result.RenderAsync(Hash.FromAnonymousObject(new { context = new ContextDrop(), dummy = new[] { 1, 2, 3 } })).Result);
 		}
 
 		[Test]
 		public void TestEnumerableDrop()
 		{
-			Assert.AreEqual("123", Template.Parse("{% for c in collection %}{{c}}{% endfor %}").Render(Hash.FromAnonymousObject(new { collection = new EnumerableDrop() })));
+            Assert.AreEqual("123", Template.ParseAsync("{% for c in collection %}{{c}}{% endfor %}").Result.RenderAsync(Hash.FromAnonymousObject(new { collection = new EnumerableDrop() })).Result);
 		}
 
 		[Test]
 		public void TestEnumerableDropSize()
 		{
-			Assert.AreEqual("3", Template.Parse("{{collection.size}}").Render(Hash.FromAnonymousObject(new { collection = new EnumerableDrop() })));
+            Assert.AreEqual("3", Template.ParseAsync("{{collection.size}}").Result.RenderAsync(Hash.FromAnonymousObject(new { collection = new EnumerableDrop() })).Result);
 		}
 
 		[Test]
 		public void TestNullCatchAll()
 		{
-			Assert.AreEqual("", Template.Parse("{{ nulldrop.a_method }}").Render(Hash.FromAnonymousObject(new { nulldrop = new NullDrop() })));
+            Assert.AreEqual("", Template.ParseAsync("{{ nulldrop.a_method }}").Result.RenderAsync(Hash.FromAnonymousObject(new { nulldrop = new NullDrop() })).Result);
 		}
 
 		[Test]
@@ -289,8 +289,8 @@ namespace DotLiquid.Tests
 			dataRow["Column1"] = "Hello";
 			dataRow["Column2"] = "World";
 
-			Template tpl = Template.Parse(" {{ row.column1 }} ");
-			Assert.AreEqual(" Hello ", tpl.Render(Hash.FromAnonymousObject(new { row = new DataRowDrop(dataRow) })));
+			Template tpl = Template.ParseAsync(" {{ row.column1 }} ").Result;
+            Assert.AreEqual(" Hello ", tpl.RenderAsync(Hash.FromAnonymousObject(new { row = new DataRowDrop(dataRow) })).Result);
 		}
 
 		[Test]
@@ -298,11 +298,11 @@ namespace DotLiquid.Tests
 		{
 			INamingConvention savedNamingConvention = Template.NamingConvention;
 			Template.NamingConvention = new RubyNamingConvention();
-			Template template = Template.Parse("{{ value.ProductID }}");
-			Assert.AreEqual("Missing property. Did you mean 'product_id'?", template.Render(Hash.FromAnonymousObject(new
+			Template template = Template.ParseAsync("{{ value.ProductID }}").Result;
+			Assert.AreEqual("Missing property. Did you mean 'product_id'?", template.RenderAsync(Hash.FromAnonymousObject(new
 			{
 				value = new CamelCaseDrop()
-			})));
+            })).Result);
 			Template.NamingConvention = savedNamingConvention;
 		}
 	}

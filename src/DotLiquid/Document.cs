@@ -2,7 +2,9 @@ using System.Collections.Generic;
 
 namespace DotLiquid
 {
-	public class Document : Block
+    using System.Threading.Tasks;
+
+    public class Document : Block
 	{
 		/// <summary>
 		/// We don't need markup to open this block
@@ -10,9 +12,9 @@ namespace DotLiquid
 		/// <param name="tagName"></param>
 		/// <param name="markup"></param>
 		/// <param name="tokens"></param>
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
-			Parse(tokens);
+			await ParseAsync(tokens).ConfigureAwait(false);
 		}
 
 		/// <summary>

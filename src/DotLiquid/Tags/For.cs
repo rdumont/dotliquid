@@ -9,7 +9,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid.Tags
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// "For" iterates over an array or collection. 
 	/// Several useful variables are available to you within the loop.
 	///
@@ -59,7 +61,7 @@ namespace DotLiquid.Tags
 		private bool _reversed;
 		private Dictionary<string, string> _attributes;
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Match match = Syntax.Match(markup);
 			if (match.Success)
@@ -77,10 +79,10 @@ namespace DotLiquid.Tags
 				throw new SyntaxException(Liquid.ResourceManager.GetString("ForTagSyntaxException"));
 			}
 
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
 			context.Registers["for"] = context.Registers["for"] ?? new Hash(0);
 
@@ -111,22 +113,26 @@ namespace DotLiquid.Tags
 			// Store our progress through the collection for the continue flag
 			context.Registers.Get<Hash>("for")[_name] = from + length;
 
-			context.Stack(() => segment.EachWithIndex((item, index) =>
-			{
-				context[_variableName] = item;
-				context["forloop"] = Hash.FromAnonymousObject(new
-				{
-					name = _name,
-					length = length,
-					index = index + 1,
-					index0 = index,
-					rindex = length - index,
-					rindex0 = length - index - 1,
-					first = (index == 0),
-					last = (index == length - 1)
-				});
-				RenderAll(NodeList, context, result);
-			}));
+		    await context.StackAsync(async () =>
+		    {
+		        for (var index = 0; index < segment.Count; index++)
+		        {
+		            var item = segment[index];
+                    context[_variableName] = item;
+                    context["forloop"] = Hash.FromAnonymousObject(new
+                    {
+                        name = _name,
+                        length = length,
+                        index = index + 1,
+                        index0 = index,
+                        rindex = length - index,
+                        rindex0 = length - index - 1,
+                        first = (index == 0),
+                        last = (index == length - 1)
+                    });
+                    await RenderAllAsync(NodeList, context, result).ConfigureAwait(false);
+		        }
+		    }).ConfigureAwait(false);
 		}
 
 		private static List<object> SliceCollectionUsingEach(IEnumerable collection, int from, int? to)

@@ -9,14 +9,16 @@ using DotLiquid.Util;
 
 namespace DotLiquid.Tags
 {
-	public class Include : DotLiquid.Block
+    using System.Threading.Tasks;
+
+    public class Include : DotLiquid.Block
 	{
 		private static readonly Regex Syntax = new Regex(string.Format(@"({0}+)(\s+(?:with|for)\s+({0}+))?", Liquid.QuotedFragment));
 
 		private string _templateName, _variableName;
 		private Dictionary<string, string> _attributes;
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Match syntaxMatch = Syntax.Match(markup);
 			if (syntaxMatch.Success)
@@ -31,40 +33,42 @@ namespace DotLiquid.Tags
 			else
 				throw new SyntaxException(Liquid.ResourceManager.GetString("IncludeTagSyntaxException"));
 
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
-		protected override void Parse(List<string> tokens)
+		protected override Task ParseAsync(List<string> tokens)
 		{
+		    return Task.Delay(0);
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
 			IFileSystem fileSystem = context.Registers["file_system"] as IFileSystem ?? Template.FileSystem;
 			string source = fileSystem.ReadTemplateFile(context, _templateName);
-			Template partial = Template.Parse(source);
+			Template partial = await Template.ParseAsync(source).ConfigureAwait(false);
 
 			string shortenedTemplateName = _templateName.Substring(1, _templateName.Length - 2);
 			object variable = context[_variableName ?? shortenedTemplateName];
 
-			context.Stack(() =>
+			await context.StackAsync(async () =>
 			{
 				foreach (var keyValue in _attributes)
 					context[keyValue.Key] = context[keyValue.Value];
 
 				if (variable is IEnumerable)
 				{
-					((IEnumerable) variable).Cast<object>().ToList().ForEach(v =>
-					{
+					var items = ((IEnumerable) variable).Cast<object>().ToList();
+				    foreach (var v in items)
+				    {
 						context[shortenedTemplateName] = v;
-						partial.Render(result, RenderParameters.FromContext(context));
-					});
+						await partial.RenderAsync(result, RenderParameters.FromContext(context)).ConfigureAwait(false);
+				    }
 					return;
 				}
 
 				context[shortenedTemplateName] = variable;
-				partial.Render(result, RenderParameters.FromContext(context));
-			});
+				await partial.RenderAsync(result, RenderParameters.FromContext(context)).ConfigureAwait(false);
+			}).ConfigureAwait(false);
 		}
 	}
 }

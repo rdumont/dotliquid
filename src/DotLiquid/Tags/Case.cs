@@ -5,7 +5,9 @@ using DotLiquid.Exceptions;
 
 namespace DotLiquid.Tags
 {
-	public class Case : DotLiquid.Block
+    using System.Threading.Tasks;
+
+    public class Case : DotLiquid.Block
 	{
 		private static readonly Regex Syntax = new Regex(string.Format(@"({0})", Liquid.QuotedFragment));
 		private static readonly Regex WhenSyntax = new Regex(string.Format(@"({0})(?:(?:\s+or\s+|\s*\,\s*)({0}.*))?", Liquid.QuotedFragment));
@@ -13,7 +15,7 @@ namespace DotLiquid.Tags
 		private List<Condition> _blocks;
 		private string _left;
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			_blocks = new List<Condition>();
 
@@ -23,7 +25,7 @@ namespace DotLiquid.Tags
 			else
 				throw new SyntaxException(Liquid.ResourceManager.GetString("CaseTagSyntaxException"));
 
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
 		public override void UnknownTag(string tag, string markup, List<string> tokens)
@@ -43,28 +45,28 @@ namespace DotLiquid.Tags
 			}
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
-			context.Stack(() =>
+			await context.StackAsync(async () =>
 			{
 				bool executeElseBlock = true;
-				_blocks.ForEach(block =>
-				{
+			    foreach (var block in _blocks)
+			    {
 					if (block.IsElse)
 					{
 						if (executeElseBlock)
 						{
-							RenderAll(block.Attachment, context, result);
+							await RenderAllAsync(block.Attachment, context, result).ConfigureAwait(false);
 							return;
 						}
 					}
 					else if (block.Evaluate(context))
 					{
 						executeElseBlock = false;
-						RenderAll(block.Attachment, context, result);
+						await RenderAllAsync(block.Attachment, context, result).ConfigureAwait(false);
 					}
-				});
-			});
+			    }
+			}).ConfigureAwait(false);
 		}
 
 		private void RecordWhenCondition(string markup)

@@ -9,7 +9,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid
 {
-	public class Context
+    using System.Threading.Tasks;
+
+    public class Context
 	{
 		private readonly bool _rethrowErrors;
 		private Strainer _strainer;
@@ -126,14 +128,14 @@ namespace DotLiquid
 		/// context['var] #=> nil
 		/// </summary>
 		/// <param name="newScope"></param>
-		/// <param name="callback"></param>
+        /// <param name="callbackAsync"></param>
 		/// <returns></returns>
-		public void Stack(Hash newScope, Action callback)
+		public async Task StackAsync(Hash newScope, Func<Task> callbackAsync)
 		{
 			Push(newScope);
 			try
 			{
-				callback();
+                await callbackAsync().ConfigureAwait(false);
 			}
 			finally
 			{
@@ -141,9 +143,9 @@ namespace DotLiquid
 			}
 		}
 
-		public void Stack(Action callback)
+        public async Task StackAsync(Func<Task> callbackAsync)
 		{
-			Stack(new Hash(), callback);
+			await StackAsync(new Hash(), callbackAsync);
 		}
 
 		public void ClearInstanceAssigns()

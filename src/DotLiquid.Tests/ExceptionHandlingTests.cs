@@ -23,8 +23,8 @@ namespace DotLiquid.Tests
 		public void TestSyntaxException()
 		{
 			Template template = null;
-			Assert.DoesNotThrow(() => { template = Template.Parse(" {{ errors.syntax_exception }} "); });
-			string result = template.Render(Hash.FromAnonymousObject(new { errors = new ExceptionDrop() }));
+            Assert.DoesNotThrow(() => { template = Template.ParseAsync(" {{ errors.syntax_exception }} ").Result; });
+            string result = template.RenderAsync(Hash.FromAnonymousObject(new { errors = new ExceptionDrop() })).Result;
 			Assert.AreEqual(" Liquid syntax error: syntax exception ", result);
 
 			Assert.AreEqual(1, template.Errors.Count);
@@ -35,8 +35,8 @@ namespace DotLiquid.Tests
 		public void TestArgumentException()
 		{
 			Template template = null;
-			Assert.DoesNotThrow(() => { template = Template.Parse(" {{ errors.argument_exception }} "); });
-			string result = template.Render(Hash.FromAnonymousObject(new { errors = new ExceptionDrop() }));
+            Assert.DoesNotThrow(() => { template = Template.ParseAsync(" {{ errors.argument_exception }} ").Result; });
+            string result = template.RenderAsync(Hash.FromAnonymousObject(new { errors = new ExceptionDrop() })).Result;
 			Assert.AreEqual(" Liquid error: argument exception ", result);
 
 			Assert.AreEqual(1, template.Errors.Count);
@@ -46,15 +46,15 @@ namespace DotLiquid.Tests
 		[Test]
 		public void TestMissingEndTagParseTimeError()
 		{
-			Assert.Throws<SyntaxException>(() => Template.Parse(" {% for a in b %} ... "));
+			Assert.Throws<SyntaxException>(async () => await Template.ParseAsync(" {% for a in b %} ... "));
 		}
 
 		[Test]
 		public void TestUnrecognizedOperator()
 		{
 			Template template = null;
-			Assert.DoesNotThrow(() => { template = Template.Parse(" {% if 1 =! 2 %}ok{% endif %} "); });
-			Assert.AreEqual(" Liquid error: Unknown operator =! ", template.Render());
+            Assert.DoesNotThrow(() => { template = Template.ParseAsync(" {% if 1 =! 2 %}ok{% endif %} ").Result; });
+            Assert.AreEqual(" Liquid error: Unknown operator =! ", template.RenderAsync().Result);
 
 			Assert.AreEqual(1, template.Errors.Count);
 			Assert.IsInstanceOf<ArgumentException>(template.Errors[0]);

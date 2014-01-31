@@ -5,7 +5,9 @@ using DotLiquid.Exceptions;
 
 namespace DotLiquid.Tags
 {
-	public class BlockDrop : Drop
+    using System.Threading.Tasks;
+
+    public class BlockDrop : Drop
 	{
 		private readonly Block _block;
 	    private readonly TextWriter _result;
@@ -16,9 +18,9 @@ namespace DotLiquid.Tags
 		    _result = result;
 		}
 
-	    public void Super()
+	    public async Task Super()
 		{
-			_block.CallSuper(Context, _result);
+			await _block.CallSuperAsync(Context, _result).ConfigureAwait(false);
 		}
 	}
 
@@ -66,7 +68,7 @@ namespace DotLiquid.Tags
 
 		internal string BlockName { get; set; }
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Match syntaxMatch = Syntax.Match(markup);
 			if (syntaxMatch.Success)
@@ -76,7 +78,7 @@ namespace DotLiquid.Tags
 
 			if (tokens != null)
 			{
-				base.Initialize(tagName, markup, tokens);
+				await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 			}
 		}
 
@@ -102,14 +104,14 @@ namespace DotLiquid.Tags
 			});
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
 			BlockRenderState blockState = BlockRenderState.Find(context);
-			context.Stack(() =>
+			await context.StackAsync(async () =>
 			{
 				context["block"] = new BlockDrop(this, result);
-				RenderAll(GetNodeList(blockState), context, result);
-			});
+				await RenderAllAsync(GetNodeList(blockState), context, result).ConfigureAwait(false);
+			}).ConfigureAwait(false);
 		}
 
         // Gets the render-time node list from the node state
@@ -118,23 +120,23 @@ namespace DotLiquid.Tags
             return blockState == null ? NodeList : blockState.GetNodeList(this);
         }
 
-        public void AddParent(Dictionary<Block, Block> parents, List<object> nodeList)
+        public async Task AddParentAsync(Dictionary<Block, Block> parents, List<object> nodeList)
         {
             Block parent;
             if(parents.TryGetValue(this, out parent))
             {
-                parent.AddParent(parents, nodeList);
+                await parent.AddParentAsync(parents, nodeList).ConfigureAwait(false);
             }
             else
             {
                 parent = new Block();
-                parent.Initialize(TagName, BlockName, null);
+                await parent.InitializeAsync(TagName, BlockName, null).ConfigureAwait(false);
                 parent.NodeList = new List<object>(nodeList);
                 parents[this] = parent;
             }
         }
 
-		public void CallSuper(Context context, TextWriter result)
+		public async Task CallSuperAsync(Context context, TextWriter result)
 		{
             BlockRenderState blockState = BlockRenderState.Find(context);
 		    Block parent;
@@ -142,7 +144,7 @@ namespace DotLiquid.Tags
                 && blockState.Parents.TryGetValue(this, out parent)
                 && parent != null)
 		    {
-		        parent.Render(context, result);
+		        await parent.RenderAsync(context, result).ConfigureAwait(false);
 		    }
 		}
 	}

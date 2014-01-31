@@ -2,8 +2,10 @@ using System.IO;
 
 namespace DotLiquid
 {
-	internal interface IRenderable
+    using System.Threading.Tasks;
+
+    internal interface IRenderable
 	{
-		void Render(Context context, TextWriter result);
+		Task RenderAsync(Context context, TextWriter result);
 	}
 }

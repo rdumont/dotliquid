@@ -20,16 +20,16 @@ namespace DotLiquid.Tests
 		[Test]
 		public void TestLiquidTypeAttributeWithNoAllowedMembers()
 		{
-			Template template = Template.Parse("{{context.Name}}");
-			var output = template.Render(Hash.FromAnonymousObject(new { context = new MyLiquidTypeWithNoAllowedMembers() { Name = "worked" } }));
+            Template template = Template.ParseAsync("{{context.Name}}").Result;
+            var output = template.RenderAsync(Hash.FromAnonymousObject(new { context = new MyLiquidTypeWithNoAllowedMembers() { Name = "worked" } })).Result;
 			Assert.AreEqual("", output);
 		}
 
 		[Test]
 		public void TestLiquidTypeAttributeWithAllowedMember()
 		{
-			Template template = Template.Parse("{{context.Name}}");
-			var output = template.Render(Hash.FromAnonymousObject(new { context = new MyLiquidTypeWithAllowedMember() { Name = "worked" } }));
+            Template template = Template.ParseAsync("{{context.Name}}").Result;
+            var output = template.RenderAsync(Hash.FromAnonymousObject(new { context = new MyLiquidTypeWithAllowedMember() { Name = "worked" } })).Result;
 			Assert.AreEqual("worked", output);
 		}
 	}

@@ -3,7 +3,9 @@ using System.Text.RegularExpressions;
 
 namespace DotLiquid.Tags
 {
-	public class Comment : DotLiquid.Block
+    using System.Threading.Tasks;
+
+    public class Comment : DotLiquid.Block
 	{
 		public static string FromShortHand(string @string)
 		{
@@ -14,8 +16,9 @@ namespace DotLiquid.Tags
 			return match.Success ? string.Format(@"{{% comment %}}{0}{{% endcomment %}}", match.Groups[1].Value) : @string;
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override Task RenderAsync(Context context, TextWriter result)
 		{
+		    return Task.Delay(0);
 		}
 	}
 }

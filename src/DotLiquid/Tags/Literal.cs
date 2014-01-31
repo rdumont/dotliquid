@@ -9,7 +9,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid.Tags
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// Literal
 	/// Literal outputs text as is, usefull if your template contains Liquid syntax.
 	/// 
@@ -30,7 +32,7 @@ namespace DotLiquid.Tags
 			return match.Success ? string.Format(@"{{% literal %}}{0}{{% endliteral %}}", match.Groups[1].Value) : @string;
 		}
 
-		protected override void Parse(List<string> tokens)
+		protected override Task ParseAsync(List<string> tokens)
 		{
 			NodeList = NodeList ?? new List<object>();
 			NodeList.Clear();
@@ -42,13 +44,14 @@ namespace DotLiquid.Tags
 				if (fullTokenMatch.Success && BlockDelimiter == fullTokenMatch.Groups[1].Value)
 				{
 					EndTag();
-					return;
+					return Task.Delay(0);
 				}
 				else
 					NodeList.Add(token);
 			}
 
 			AssertMissingDelimitation();
+		    return Task.Delay(0);
 		}
 	}
 }

@@ -9,7 +9,9 @@ using DotLiquid.NamingConventions;
 
 namespace DotLiquid
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// Templates are central to liquid.
 	/// Interpreting templates is a two step process. First you compile the
 	/// source code you got. During compile time some extensive error checking is performed.
@@ -140,10 +142,10 @@ namespace DotLiquid
 		/// </summary>
 		/// <param name="source"></param>
 		/// <returns></returns>
-		public static Template Parse(string source)
+		public static async Task<Template> ParseAsync(string source)
 		{
 			Template template = new Template();
-			template.ParseInternal(source);
+			await template.ParseInternalAsync(source).ConfigureAwait(false);
 			return template;
 		}
 
@@ -185,13 +187,13 @@ namespace DotLiquid
 		/// </summary>
 		/// <param name="source"></param>
 		/// <returns></returns>
-		internal Template ParseInternal(string source)
+		internal async Task<Template> ParseInternalAsync(string source)
 		{
 			source = DotLiquid.Tags.Literal.FromShortHand(source);
 			source = DotLiquid.Tags.Comment.FromShortHand(source);
 
 			Root = new Document();
-			Root.Initialize(null, null, Tokenize(source));
+			await Root.InitializeAsync(null, null, Tokenize(source)).ConfigureAwait(false);
 			return this;
 		}
 
@@ -199,9 +201,9 @@ namespace DotLiquid
 		/// Renders the template using default parameters and returns a string containing the result.
 		/// </summary>
 		/// <returns></returns>
-		public string Render()
+		public async Task<string> RenderAsync()
 		{
-			return Render(new RenderParameters());
+			return await RenderAsync(new RenderParameters()).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -209,12 +211,12 @@ namespace DotLiquid
 		/// </summary>
 		/// <param name="localVariables"></param>
 		/// <returns></returns>
-		public string Render(Hash localVariables)
+		public async Task<string> RenderAsync(Hash localVariables)
 		{
-			return Render(new RenderParameters
+			return await RenderAsync(new RenderParameters
 			{
 				LocalVariables = localVariables
-			});
+			}).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -222,11 +224,11 @@ namespace DotLiquid
 		/// </summary>
 		/// <param name="parameters"></param>
 		/// <returns></returns>
-		public string Render(RenderParameters parameters)
+		public async Task<string> RenderAsync(RenderParameters parameters)
 		{
 			using (TextWriter writer = new StringWriter())
 			{
-				Render(writer, parameters);
+				await RenderAsync(writer, parameters).ConfigureAwait(false);
 				return writer.ToString();
 			}
 		}
@@ -236,9 +238,9 @@ namespace DotLiquid
 		/// </summary>
 		/// <param name="result"></param>
 		/// <param name="parameters"></param>
-		public void Render(TextWriter result, RenderParameters parameters)
+		public async Task RenderAsync(TextWriter result, RenderParameters parameters)
 		{
-			RenderInternal(result, parameters);
+			await RenderInternalAsync(result, parameters).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -246,12 +248,12 @@ namespace DotLiquid
 		/// </summary>
 		/// <param name="stream"></param>
 		/// <param name="parameters"></param>
-		public void Render(Stream stream, RenderParameters parameters)
+		public async Task RenderAsync(Stream stream, RenderParameters parameters)
 		{
 			// Can't dispose this new StreamWriter, because it would close the
 			// passed-in stream, which isn't up to us.
 			StreamWriter streamWriter = new StreamWriter(stream);
-			RenderInternal(streamWriter, parameters);
+			await RenderInternalAsync(streamWriter, parameters).ConfigureAwait(false);
 			streamWriter.Flush();
 		}
 
@@ -267,7 +269,7 @@ namespace DotLiquid
 		/// * <tt>registers</tt> : hash with register variables. Those can be accessed from
 		/// filters and tags and might be useful to integrate liquid more with its host application
 		/// </summary>
-		private void RenderInternal(TextWriter result, RenderParameters parameters)
+		private async Task RenderInternalAsync(TextWriter result, RenderParameters parameters)
 		{
 			if (Root == null)
 				return;
@@ -286,7 +288,7 @@ namespace DotLiquid
 			try
 			{
 				// Render the nodelist.
-				Root.Render(context, result);
+				await Root.RenderAsync(context, result).ConfigureAwait(false);
 			}
 			finally
 			{

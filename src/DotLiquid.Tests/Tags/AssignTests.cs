@@ -3,58 +3,60 @@ using NUnit.Framework;
 
 namespace DotLiquid.Tests.Tags
 {
-	[TestFixture]
+    using System.Threading.Tasks;
+
+    [TestFixture]
 	public class AssignTests
 	{
 		[Test]
-		public void TestAssignedVariable()
+		public async Task TestAssignedVariable()
 		{
-			Helper.AssertTemplateResult(".foo.", "{% assign foo = values %}.{{ foo[0] }}.",
+			await Helper.AssertTemplateResultAsync(".foo.", "{% assign foo = values %}.{{ foo[0] }}.",
 				Hash.FromAnonymousObject(new { values = new[] { "foo", "bar", "baz" } }));
-			Helper.AssertTemplateResult(".bar.", "{% assign foo = values %}.{{ foo[1] }}.",
+			await Helper.AssertTemplateResultAsync(".bar.", "{% assign foo = values %}.{{ foo[1] }}.",
 				Hash.FromAnonymousObject(new { values = new[] { "foo", "bar", "baz" } }));
 		}
 
 		[Test]
-		public void TestAssignDecimal()
+		public async Task TestAssignDecimal()
 		{
-			Helper.AssertTemplateResult(string.Format("10{0}05", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator),
+			await Helper.AssertTemplateResultAsync(string.Format("10{0}05", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator),
 				"{% assign foo = decimal %}{{ foo }}",
 				Hash.FromAnonymousObject(new { @decimal = 10.05d }));
 		}
 
 		[Test, SetCulture("en-GB")]
-		public void TestAssignDecimalInlineWithEnglishDecimalSeparator()
+		public async Task TestAssignDecimalInlineWithEnglishDecimalSeparator()
 		{
-			Helper.AssertTemplateResult(string.Format("2{0}5", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator),
+			await Helper.AssertTemplateResultAsync(string.Format("2{0}5", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator),
 				"{% assign foo = 2.5 %}{{ foo }}");
 		}
 
 		[Test, SetCulture("en-GB")]
-		public void TestAssignDecimalInlineWithEnglishGroupSeparator()
+		public async Task TestAssignDecimalInlineWithEnglishGroupSeparator()
 		{
-			Helper.AssertTemplateResult("2500",
+			await Helper.AssertTemplateResultAsync("2500",
 				"{% assign foo = 2,500 %}{{ foo }}");
 		}
 
 		[Test, SetCulture("fr-FR")]
-		public void TestAssignDecimalInlineWithFrenchDecimalSeparator()
+		public async Task TestAssignDecimalInlineWithFrenchDecimalSeparator()
 		{
-			Helper.AssertTemplateResult(string.Format("2{0}5", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator),
+			await Helper.AssertTemplateResultAsync(string.Format("2{0}5", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator),
 				"{% assign foo = 2,5 %}{{ foo }}");
 		}
 
 		[Test, SetCulture("fr-FR")]
-		public void TestAssignDecimalInlineWithInvariantDecimalSeparatorInFrenchCulture()
+		public async Task TestAssignDecimalInlineWithInvariantDecimalSeparatorInFrenchCulture()
 		{
-			Helper.AssertTemplateResult(string.Format("2{0}5", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator),
+			await Helper.AssertTemplateResultAsync(string.Format("2{0}5", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator),
 				"{% assign foo = 2.5 %}{{ foo }}");
 		}
 
 		[Test]
-		public void TestAssignWithFilter()
+		public async Task TestAssignWithFilter()
 		{
-			Helper.AssertTemplateResult(".bar.", "{% assign foo = values | split: ',' %}.{{ foo[1] }}.", 
+			await Helper.AssertTemplateResultAsync(".bar.", "{% assign foo = values | split: ',' %}.{{ foo[1] }}.", 
 				Hash.FromAnonymousObject(new { values = "foo,bar,baz" }));
 		}
 	}

@@ -7,7 +7,9 @@ using DotLiquid.Exceptions;
 
 namespace DotLiquid.Tags
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// Capture stores the result of a block into a variable without rendering it inplace.
 	/// 
 	/// {% capture heading %}
@@ -25,7 +27,7 @@ namespace DotLiquid.Tags
 
 		private string _to;
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Match syntaxMatch = Syntax.Match(markup);
 			if (syntaxMatch.Success)
@@ -33,14 +35,14 @@ namespace DotLiquid.Tags
 			else
 				throw new SyntaxException(Liquid.ResourceManager.GetString("CapureTagSyntaxException"));
 
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
 			using (TextWriter temp = new StringWriter())
 			{
-				base.Render(context, temp);
+				await base.RenderAsync(context, temp).ConfigureAwait(false);
 				context.Scopes.Last()[_to] = temp.ToString();
 			}
 		}

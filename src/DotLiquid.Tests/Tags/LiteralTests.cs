@@ -12,38 +12,38 @@ namespace DotLiquid.Tests.Tags
 		[Test]
 		public void TestEmptyLiteral()
 		{
-			Template t = Template.Parse("{% literal %}{% endliteral %}");
-			Assert.AreEqual(string.Empty, t.Render());
-			t = Template.Parse("{{{}}}");
-			Assert.AreEqual(string.Empty, t.Render());
+            Template t = Template.ParseAsync("{% literal %}{% endliteral %}").Result;
+            Assert.AreEqual(string.Empty, t.RenderAsync().Result);
+            t = Template.ParseAsync("{{{}}}").Result;
+            Assert.AreEqual(string.Empty, t.RenderAsync().Result);
 		}
 
 		[Test]
 		public void TestSimpleLiteralValue()
 		{
-			Template t = Template.Parse("{% literal %}howdy{% endliteral %}");
-			Assert.AreEqual("howdy", t.Render());
+            Template t = Template.ParseAsync("{% literal %}howdy{% endliteral %}").Result;
+            Assert.AreEqual("howdy", t.RenderAsync().Result);
 		}
 
 		[Test]
 		public void TestLiteralsIgnoreLiquidMarkup()
 		{
-			Template t = Template.Parse("{% literal %}{% if 'gnomeslab' contains 'liquid' %}yes{ % endif %}{% endliteral %}");
-			Assert.AreEqual("{% if 'gnomeslab' contains 'liquid' %}yes{ % endif %}", t.Render());
+            Template t = Template.ParseAsync("{% literal %}{% if 'gnomeslab' contains 'liquid' %}yes{ % endif %}{% endliteral %}").Result;
+            Assert.AreEqual("{% if 'gnomeslab' contains 'liquid' %}yes{ % endif %}", t.RenderAsync().Result);
 		}
 
 		[Test]
 		public void TestShorthandSyntax()
 		{
-			Template t = Template.Parse("{{{{% if 'gnomeslab' contains 'liquid' %}yes{ % endif %}}}}");
-			Assert.AreEqual("{% if 'gnomeslab' contains 'liquid' %}yes{ % endif %}", t.Render());
+            Template t = Template.ParseAsync("{{{{% if 'gnomeslab' contains 'liquid' %}yes{ % endif %}}}}").Result;
+            Assert.AreEqual("{% if 'gnomeslab' contains 'liquid' %}yes{ % endif %}", t.RenderAsync().Result);
 		}
 
 		[Test]
 		public void TestLiteralsDontRemoveComments()
 		{
-			Template t = Template.Parse("{{{ {# comment #} }}}");
-			Assert.AreEqual("{# comment #}", t.Render());
+            Template t = Template.ParseAsync("{{{ {# comment #} }}}").Result;
+            Assert.AreEqual("{# comment #}", t.RenderAsync().Result);
 		}
 
 		[Test]

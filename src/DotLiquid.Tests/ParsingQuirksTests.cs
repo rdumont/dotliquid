@@ -3,60 +3,62 @@ using NUnit.Framework;
 
 namespace DotLiquid.Tests
 {
-	[TestFixture]
+    using System.Threading.Tasks;
+
+    [TestFixture]
 	public class ParsingQuirksTests
 	{
 		[Test]
-		public void TestErrorWithCss()
+        public void TestErrorWithCss()
 		{
 			const string text = " div { font-weight: bold; } ";
-			Template template = Template.Parse(text);
-			Assert.AreEqual(text, template.Render());
+            Template template = Template.ParseAsync(text).Result;
+            Assert.AreEqual(text, template.RenderAsync().Result);
 			Assert.AreEqual(1, template.Root.NodeList.Count);
 			Assert.IsInstanceOf<string>(template.Root.NodeList[0]);
 		}
 
 		[Test]
-		public void TestRaiseOnSingleCloseBrace()
+        public void TestRaiseOnSingleCloseBrace()
 		{
-			Assert.Throws<SyntaxException>(() => Template.Parse("text {{method} oh nos!"));
+			Assert.Throws<SyntaxException>(async () => await Template.ParseAsync("text {{method} oh nos!"));
 		}
 
 		[Test]
-		public void TestRaiseOnLabelAndNoCloseBrace()
+        public void TestRaiseOnLabelAndNoCloseBrace()
 		{
-			Assert.Throws<SyntaxException>(() => Template.Parse("TEST {{ "));
+			Assert.Throws<SyntaxException>(async () => await Template.ParseAsync("TEST {{ "));
 		}
 
 		[Test]
-		public void TestRaiseOnLabelAndNoCloseBracePercent()
+        public void TestRaiseOnLabelAndNoCloseBracePercent()
 		{
-			Assert.Throws<SyntaxException>(() => Template.Parse("TEST {% "));
+			Assert.Throws<SyntaxException>(async () => await Template.ParseAsync("TEST {% "));
 		}
 
 		[Test]
-		public void TestErrorOnEmptyFilter()
+        public void TestErrorOnEmptyFilter()
 		{
-			Assert.DoesNotThrow(() =>
+			Assert.DoesNotThrow(async () =>
 			{
-				Template.Parse("{{test |a|b|}}");
-				Template.Parse("{{test}}");
-				Template.Parse("{{|test|}}");
+				await Template.ParseAsync("{{test |a|b|}}");
+				await Template.ParseAsync("{{test}}");
+				await Template.ParseAsync("{{|test|}}");
 			});
 		}
 
 		[Test]
-		public void TestMeaninglessParens()
+		public async Task TestMeaninglessParens()
 		{
 			Hash assigns = Hash.FromAnonymousObject(new { b = "bar", c = "baz" });
-			Helper.AssertTemplateResult(" YES ", "{% if a == 'foo' or (b == 'bar' and c == 'baz') or false %} YES {% endif %}", assigns);
+			await Helper.AssertTemplateResultAsync(" YES ", "{% if a == 'foo' or (b == 'bar' and c == 'baz') or false %} YES {% endif %}", assigns);
 		}
 
 		[Test]
-		public void TestUnexpectedCharactersSilentlyEatLogic()
+		public async Task TestUnexpectedCharactersSilentlyEatLogic()
 		{
-			Helper.AssertTemplateResult(" YES ", "{% if true && false %} YES {% endif %}");
-			Helper.AssertTemplateResult("", "{% if false || true %} YES {% endif %}");
+			await Helper.AssertTemplateResultAsync(" YES ", "{% if true && false %} YES {% endif %}");
+			await Helper.AssertTemplateResultAsync("", "{% if false || true %} YES {% endif %}");
 		}
 	}
 }

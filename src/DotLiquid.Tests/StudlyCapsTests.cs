@@ -4,55 +4,57 @@ using DotLiquid.NamingConventions;
 
 namespace DotLiquid.Tests
 {
-	[TestFixture]
+    using System.Threading.Tasks;
+
+    [TestFixture]
 	public class StudlyCapsTests
 	{
 		[Test]
-		public void TestSimpleVariablesStudlyCaps()
+		public async Task TestSimpleVariablesStudlyCaps()
 		{
 			Template.NamingConvention = new RubyNamingConvention();
-			Template template = Template.Parse("{{ Greeting }} {{ Name }}");
-			Assert.AreEqual("Hello Tobi", template.Render(Hash.FromAnonymousObject(new { greeting = "Hello", name = "Tobi" })));
+            Template template = Template.ParseAsync("{{ Greeting }} {{ Name }}").Result;
+            Assert.AreEqual("Hello Tobi", template.RenderAsync(Hash.FromAnonymousObject(new { greeting = "Hello", name = "Tobi" })).Result);
 
 			Template.NamingConvention = new CSharpNamingConvention();
-			Assert.AreEqual("Hello Tobi", template.Render(Hash.FromAnonymousObject(new { Greeting = "Hello", Name = "Tobi" })));
-			Assert.AreEqual(" ", template.Render(Hash.FromAnonymousObject(new { greeting = "Hello", name = "Tobi" })));
+            Assert.AreEqual("Hello Tobi", template.RenderAsync(Hash.FromAnonymousObject(new { Greeting = "Hello", Name = "Tobi" })).Result);
+            Assert.AreEqual(" ", template.RenderAsync(Hash.FromAnonymousObject(new { greeting = "Hello", name = "Tobi" })).Result);
 		}
 
 		[Test]
-		public void TestTagsStudlyCapsAreNotAllowed()
+		public async Task TestTagsStudlyCapsAreNotAllowed()
 		{
 			Template.NamingConvention = new RubyNamingConvention();
-			Assert.Throws<SyntaxException>(() => Template.Parse("{% IF user = 'tobi' %}Hello Tobi{% EndIf %}"));
+			Assert.Throws<SyntaxException>(async () => await Template.ParseAsync("{% IF user = 'tobi' %}Hello Tobi{% EndIf %}"));
 		}
 
 		[Test]
-		public void TestFiltersStudlyCapsAreNotAllowed()
+		public async Task TestFiltersStudlyCapsAreNotAllowed()
 		{
 			Template.NamingConvention = new RubyNamingConvention();
-			Template template = Template.Parse("{{ 'hi tobi' | upcase }}");
-			Assert.AreEqual("HI TOBI", template.Render());
+            Template template = Template.ParseAsync("{{ 'hi tobi' | upcase }}").Result;
+            Assert.AreEqual("HI TOBI", template.RenderAsync().Result);
 
 			Template.NamingConvention = new CSharpNamingConvention();
-			template = Template.Parse("{{ 'hi tobi' | Upcase }}");
-			Assert.AreEqual("HI TOBI", template.Render());
+            template = Template.ParseAsync("{{ 'hi tobi' | Upcase }}").Result;
+            Assert.AreEqual("HI TOBI", template.RenderAsync().Result);
 		}
 
 		[Test]
-		public void TestAssignsStudlyCaps()
+		public async Task TestAssignsStudlyCaps()
 		{
 			Template.NamingConvention = new RubyNamingConvention();
 
-			Helper.AssertTemplateResult(".foo.", "{% assign FoO = values %}.{{ fOo[0] }}.",
+			await Helper.AssertTemplateResultAsync(".foo.", "{% assign FoO = values %}.{{ fOo[0] }}.",
 				Hash.FromAnonymousObject(new { values = new[] { "foo", "bar", "baz" } }));
-			Helper.AssertTemplateResult(".bar.", "{% assign fOo = values %}.{{ fOO[1] }}.",
+			await Helper.AssertTemplateResultAsync(".bar.", "{% assign fOo = values %}.{{ fOO[1] }}.",
 				Hash.FromAnonymousObject(new { values = new[] { "foo", "bar", "baz" } }));
 
 			Template.NamingConvention = new CSharpNamingConvention();
 
-			Helper.AssertTemplateResult(".foo.", "{% assign Foo = values %}.{{ Foo[0] }}.",
+			await Helper.AssertTemplateResultAsync(".foo.", "{% assign Foo = values %}.{{ Foo[0] }}.",
 				Hash.FromAnonymousObject(new { values = new[] { "foo", "bar", "baz" } }));
-			Helper.AssertTemplateResult(".bar.", "{% assign fOo = values %}.{{ fOo[1] }}.",
+			await Helper.AssertTemplateResultAsync(".bar.", "{% assign fOo = values %}.{{ fOo[1] }}.",
 				Hash.FromAnonymousObject(new { values = new[] { "foo", "bar", "baz" } }));
 		}
 	}

@@ -7,7 +7,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid.Tags
 {
-	/// <summary>
+    using System.Threading.Tasks;
+
+    /// <summary>
 	/// Assign sets a variable in your template.
 	///
 	/// {% assign foo = 'monkey' %}
@@ -23,7 +25,7 @@ namespace DotLiquid.Tags
 		private string _to;
 		private Variable _from;
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Match syntaxMatch = Syntax.Match(markup);
 			if (syntaxMatch.Success)
@@ -36,12 +38,12 @@ namespace DotLiquid.Tags
 				throw new SyntaxException(Liquid.ResourceManager.GetString("AssignTagSyntaxException"));
 			}
 
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
-			context.Scopes.Last()[_to] = _from.Render(context);
+            context.Scopes.Last()[_to] = await _from.RenderAsync(context).ConfigureAwait(false);
 		}
 	}
 }

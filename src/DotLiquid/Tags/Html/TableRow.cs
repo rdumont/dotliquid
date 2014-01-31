@@ -10,14 +10,16 @@ using DotLiquid.Util;
 
 namespace DotLiquid.Tags.Html
 {
-	public class TableRow : DotLiquid.Block
+    using System.Threading.Tasks;
+
+    public class TableRow : DotLiquid.Block
 	{
 		private static readonly Regex Syntax = R.B(R.Q(@"(\w+)\s+in\s+({0}+)"), Liquid.VariableSignature);
 
 		private string _variableName, _collectionName;
 		private Dictionary<string, string> _attributes;
 
-		public override void Initialize(string tagName, string markup, List<string> tokens)
+		public override async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			Match syntaxMatch = Syntax.Match(markup);
 			if (syntaxMatch.Success)
@@ -30,10 +32,10 @@ namespace DotLiquid.Tags.Html
 			else
 				throw new SyntaxException(Liquid.ResourceManager.GetString("TableRowTagSyntaxException"));
 
-			base.Initialize(tagName, markup, tokens);
+			await base.InitializeAsync(tagName, markup, tokens).ConfigureAwait(false);
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
 			object coll = context[_collectionName];
 
@@ -53,8 +55,8 @@ namespace DotLiquid.Tags.Html
 				collection = collection.Take(limit);
 			}
 
-			collection = collection.ToList();
-			int length = collection.Count();
+			var listCollection = collection.ToList();
+			int length = listCollection.Count;
 
 			int cols = Convert.ToInt32(context[_attributes["cols"]]);
 
@@ -62,40 +64,44 @@ namespace DotLiquid.Tags.Html
 			int col = 0;
 
 			result.WriteLine("<tr class=\"row1\">");
-			context.Stack(() => collection.EachWithIndex((item, index) =>
+			await context.StackAsync(async () =>
 			{
-				context[_variableName] = item;
-				context["tablerowloop"] = Hash.FromAnonymousObject(new
-				{
-					length = length,
-					index = index + 1,
-					index0 = index,
-					col = col + 1,
-					col0 = col,
-					rindex = length - index,
-					rindex0 = length - index - 1,
-					first = (index == 0),
-					last = (index == length - 1),
-					col_first = (col == 0),
-					col_last = (col == cols - 1)
-				});
+			    for (var index = 0; index < length; index++)
+			    {
+                    var item = listCollection[index];
+                    context[_variableName] = item;
+                    context["tablerowloop"] = Hash.FromAnonymousObject(new
+                    {
+                        length = length,
+                        index = index + 1,
+                        index0 = index,
+                        col = col + 1,
+                        col0 = col,
+                        rindex = length - index,
+                        rindex0 = length - index - 1,
+                        first = (index == 0),
+                        last = (index == length - 1),
+                        col_first = (col == 0),
+                        col_last = (col == cols - 1)
+                    });
 
-				++col;
+                    ++col;
 
-				using (TextWriter temp = new StringWriter())
-				{
-					RenderAll(NodeList, context, temp);
-					result.Write("<td class=\"col{0}\">{1}</td>", col, temp.ToString());
-				}
+                    using (TextWriter temp = new StringWriter())
+                    {
+                        await RenderAllAsync(NodeList, context, temp).ConfigureAwait(false);
+                        result.Write("<td class=\"col{0}\">{1}</td>", col, temp.ToString());
+                    }
 
-				if (col == cols && index != length - 1)
-				{
-					col = 0;
-					++row;
-					result.WriteLine("</tr>");
-					result.Write("<tr class=\"row{0}\">", row);
-				}
-			}));
+                    if (col == cols && index != length - 1)
+                    {
+                        col = 0;
+                        ++row;
+                        result.WriteLine("</tr>");
+                        result.Write("<tr class=\"row{0}\">", row);
+                    }
+			    }
+			}).ConfigureAwait(false);
 			result.WriteLine("</tr>");
 		}
 	}

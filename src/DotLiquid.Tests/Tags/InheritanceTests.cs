@@ -3,7 +3,9 @@ using NUnit.Framework;
 
 namespace DotLiquid.Tests.Tags
 {
-	[TestFixture]
+    using System.Threading.Tasks;
+
+    [TestFixture]
 	public class InheritanceTests
 	{
 		private class TestFileSystem : IFileSystem
@@ -65,103 +67,103 @@ namespace DotLiquid.Tests.Tags
 		[Test]
 		public void CanOutputTheContentsOfTheExtendedTemplate()
 		{
-			Template template = Template.Parse(
+			Template template = Template.ParseAsync(
 				@"{% extends 'simple' %}
                     {% block thing %}
                         yeah
-                    {% endblock %}");
+                    {% endblock %}").Result;
 
-			StringAssert.Contains("test", template.Render());
+			StringAssert.Contains("test", template.RenderAsync().Result);
 		}
 
 		[Test]
 		public void CanInherit()
 		{
-			Template template = Template.Parse(@"{% extends 'complex' %}");
+			Template template = Template.ParseAsync(@"{% extends 'complex' %}").Result;
 
-			StringAssert.Contains("thing block", template.Render());
+			StringAssert.Contains("thing block", template.RenderAsync().Result);
 		}
 
 		[Test]
 		public void CanInheritAndReplaceBlocks()
 		{
-			Template template = Template.Parse(
+			Template template = Template.ParseAsync(
 				@"{% extends 'complex' %}
                     {% block another %}
                         new content for another
-                    {% endblock %}");
+                    {% endblock %}").Result;
 
-			StringAssert.Contains("new content for another", template.Render());
+			StringAssert.Contains("new content for another", template.RenderAsync().Result);
 		}
 
 		[Test]
 		public void CanProcessNestedInheritance()
 		{
-			Template template = Template.Parse(
+			Template template = Template.ParseAsync(
 				@"{% extends 'nested' %}
                     {% block thing %}
                         replacing block thing
-                    {% endblock %}");
+                    {% endblock %}").Result;
 
-			StringAssert.Contains("replacing block thing", template.Render());
-			StringAssert.DoesNotContain("thing block", template.Render());
+			StringAssert.Contains("replacing block thing", template.RenderAsync().Result);
+			StringAssert.DoesNotContain("thing block", template.RenderAsync().Result);
 		}
 
 		[Test]
-		public void CanRenderSuper()
+		public async Task CanRenderSuper()
 		{
-			Template template = Template.Parse(
+            Template template = await Template.ParseAsync(
 				@"{% extends 'complex' %}
                     {% block another %}
                         {{ block.super }} + some other content
                     {% endblock %}");
 
-			StringAssert.Contains("another block", template.Render());
-			StringAssert.Contains("some other content", template.Render());
+			StringAssert.Contains("another block", await template.RenderAsync());
+			StringAssert.Contains("some other content", await template.RenderAsync());
 		}
 
 	    [Test]
 	    public void CanDefineBlockInInheritedBlock()
 	    {
-	        Template template = Template.Parse(
+	        Template template = Template.ParseAsync(
 	            @"{% extends 'middle' %}
-                  {% block middle %}C{% endblock %}");
-            Assert.AreEqual("ABCYZ", template.Render());
+                  {% block middle %}C{% endblock %}").Result;
+            Assert.AreEqual("ABCYZ", template.RenderAsync().Result);
 	    }
 
         [Test]
         public void CanDefineContentInInheritedBlockFromAboveParent()
         {
-            Template template = Template.Parse(
+            Template template = Template.ParseAsync(
                 @"{% extends 'middle' %}
-                  {% block start %}!{% endblock %}");
-            Assert.AreEqual("!ABYZ", template.Render());
+                  {% block start %}!{% endblock %}").Result;
+            Assert.AreEqual("!ABYZ", template.RenderAsync().Result);
         }
 
         [Test]
         public void CanRenderBlockContainedInConditional()
         {
-            Template template = Template.Parse(
+            Template template = Template.ParseAsync(
                 @"{% extends 'middleunless' %}
-                  {% block middle %}C{% endblock %}");
-            Assert.AreEqual("ABCYZ", template.Render());
+                  {% block middle %}C{% endblock %}").Result;
+            Assert.AreEqual("ABCYZ", template.RenderAsync().Result);
 
-            template = Template.Parse(
+            template = Template.ParseAsync(
                 @"{% extends 'middleunless' %}
                   {% block start %}{% assign nomiddle = true %}{% endblock %}
-                  {% block middle %}C{% endblock %}");
-            Assert.AreEqual("ABYZ", template.Render());
+                  {% block middle %}C{% endblock %}").Result;
+            Assert.AreEqual("ABYZ", template.RenderAsync().Result);
         }
 
         [Test]
         public void RepeatedRendersProduceSameResult()
         {
-            Template template = Template.Parse(
+            Template template = Template.ParseAsync(
                 @"{% extends 'middle' %}
                   {% block start %}!{% endblock %}
-                  {% block middle %}C{% endblock %}");
-            Assert.AreEqual("!ABCYZ", template.Render());
-            Assert.AreEqual("!ABCYZ", template.Render());
+                  {% block middle %}C{% endblock %}").Result;
+            Assert.AreEqual("!ABCYZ", template.RenderAsync().Result);
+            Assert.AreEqual("!ABCYZ", template.RenderAsync().Result);
         }
 	}
 }

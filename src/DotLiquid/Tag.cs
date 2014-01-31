@@ -3,7 +3,9 @@ using System.IO;
 
 namespace DotLiquid
 {
-	public class Tag : IRenderable
+    using System.Threading.Tasks;
+
+    public class Tag : IRenderable
 	{
 		public List<object> NodeList { get; protected set; }
 		protected string TagName { get; private set; }
@@ -20,15 +22,16 @@ namespace DotLiquid
 		{
 		}
 
-		public virtual void Initialize(string tagName, string markup, List<string> tokens)
+		public virtual async Task InitializeAsync(string tagName, string markup, List<string> tokens)
 		{
 			TagName = tagName;
 			Markup = markup;
-			Parse(tokens);
+			await ParseAsync(tokens).ConfigureAwait(false);
 		}
 
-		protected virtual void Parse(List<string> tokens)
+		protected virtual Task ParseAsync(List<string> tokens)
 		{
+		    return Task.Delay(0);
 		}
 
 		public string Name
@@ -36,8 +39,9 @@ namespace DotLiquid
 			get { return GetType().Name.ToLower(); }
 		}
 
-		public virtual void Render(Context context, TextWriter result)
+		public virtual Task RenderAsync(Context context, TextWriter result)
 		{
+		    return Task.Delay(0);
 		}
 
 		/// <summary>
@@ -45,11 +49,11 @@ namespace DotLiquid
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		internal string Render(Context context)
+		internal async Task<string> RenderAsync(Context context)
 		{
 			using (TextWriter result = new StringWriter())
 			{
-				Render(context, result);
+				await RenderAsync(context, result).ConfigureAwait(false);
 				return result.ToString();
 			}
 		}

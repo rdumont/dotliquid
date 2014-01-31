@@ -7,7 +7,9 @@ using DotLiquid.Util;
 
 namespace DotLiquid
 {
-	public class Block : Tag
+    using System.Threading.Tasks;
+
+    public class Block : Tag
 	{
 		private static readonly Regex IsTag = new Regex(string.Format(@"^{0}", Liquid.TagStart));
 		private static readonly Regex IsVariable = new Regex(string.Format(@"^{0}", Liquid.VariableStart));
@@ -15,7 +17,7 @@ namespace DotLiquid
 
 		internal static readonly Regex FullToken = new Regex(string.Format(@"^{0}\s*(\w+)\s*(.*)?{1}$", Liquid.TagStart, Liquid.TagEnd));
 
-		protected override void Parse(List<string> tokens)
+		protected override async Task ParseAsync(List<string> tokens)
 		{
 			NodeList = NodeList ?? new List<object>();
 			NodeList.Clear();
@@ -42,7 +44,7 @@ namespace DotLiquid
 						if ((tagType = Template.GetTagType(fullTokenMatch.Groups[1].Value)) != null)
 						{
 							Tag tag = (Tag) Activator.CreateInstance(tagType);
-							tag.Initialize(fullTokenMatch.Groups[1].Value, fullTokenMatch.Groups[2].Value, tokens);
+							await tag.InitializeAsync(fullTokenMatch.Groups[1].Value, fullTokenMatch.Groups[2].Value, tokens).ConfigureAwait(false);
 							NodeList.Add(tag);
 
 							// If the tag has some rules (eg: it must occur once) then check for them
@@ -115,9 +117,9 @@ namespace DotLiquid
 			throw new SyntaxException(Liquid.ResourceManager.GetString("BlockVariableNotTerminatedException"), token, Liquid.VariableEnd);
 		}
 
-		public override void Render(Context context, TextWriter result)
+		public override async Task RenderAsync(Context context, TextWriter result)
 		{
-			RenderAll(NodeList, context, result);
+			await RenderAllAsync(NodeList, context, result).ConfigureAwait(false);
 		}
 
 		protected virtual void AssertMissingDelimitation()
@@ -125,24 +127,24 @@ namespace DotLiquid
 			throw new SyntaxException(Liquid.ResourceManager.GetString("BlockTagNotClosedException"), BlockName);
 		}
 
-		protected void RenderAll(List<object> list, Context context, TextWriter result)
+		protected async Task RenderAllAsync(List<object> list, Context context, TextWriter result)
 		{
-			list.ForEach(token =>
-			{
-				try
-				{
-					if (token is IRenderable)
-						((IRenderable) token).Render(context, result);
-					else
-						result.Write(token.ToString());
-				}
-				catch (Exception ex)
-				{
-					if (ex.InnerException is LiquidException)
-						ex = ex.InnerException;
-					result.Write(context.HandleError(ex));
-				}
-			});
+		    foreach (var token in list)
+            {
+                try
+                {
+                    if (token is IRenderable)
+                        await ((IRenderable)token).RenderAsync(context, result).ConfigureAwait(false);
+                    else
+                        result.Write(token.ToString());
+                }
+                catch (Exception ex)
+                {
+                    if (ex.InnerException is LiquidException)
+                        ex = ex.InnerException;
+                    result.Write(context.HandleError(ex));
+                }
+		    }
 		}
 	}
 }
